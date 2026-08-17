@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Investment Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg-base: #f3f4f8;
+    --panel: rgba(255,255,255,0.45);
+    --panel-border: rgba(255,255,255,0.6);
+    --panel-shadow: 0 8px 32px rgba(31,38,68,0.10), inset 0 1px 0 rgba(255,255,255,0.5);
+    --text: #33333c;
+    --muted: #7a7a85;
+    --accent: #5fbf88;
+    --accent-dark: #479c6c;
+    --accent-soft: rgba(95,191,136,0.14);
+    --blue: #6b93d6;
+    --amber: #e0a75e;
+    --input-bg: rgba(255,255,255,0.55);
+    --input-border: rgba(120,120,140,0.22);
+    --ring-track: rgba(120,120,140,0.15);
+    --danger: #d97575;
+    --blob1: #cfe8d8;
+    --blob2: #cdd9f2;
+    --blob3: #f2ddc9;
+    --blob4: #e6d2ee;
+  }
+  body.dark{
+    --bg-base: #101116;
+    --panel: rgba(35,36,46,0.5);
+    --panel-border: rgba(255,255,255,0.08);
+    --panel-shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
+    --text: #eceef3;
+    --muted: #9a9aa6;
+    --accent: #59d18f;
+    --accent-dark: #3fae72;
+    --accent-soft: rgba(89,209,143,0.16);
+    --blue: #7fa4e6;
+    --amber: #e6b573;
+    --input-bg: rgba(255,255,255,0.06);
+    --input-border: rgba(255,255,255,0.12);
+    --ring-track: rgba(255,255,255,0.1);
+    --danger: #e08888;
+    --blob1: #1b3a2c;
+    --blob2: #1c2440;
+    --blob3: #3a2c1c;
+    --blob4: #2e1f3a;
+  }
+  *{box-sizing:border-box;}
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    min-height:100vh;
+    background: var(--bg-base);
+    color: var(--text);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", Arial, sans-serif;
+    transition: background 0.4s ease, color 0.4s ease;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* ---------- Animated aurora background ---------- */
+  .aurora{
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    filter: blur(70px) saturate(140%);
+  }
+  .blob{
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.75;
+    will-change: transform;
+  }
+  .blob1{
+    width: 46vw; height: 46vw;
+    background: var(--blob1);
+    top: -10%; left: -8%;
+    animation: float1 22s ease-in-out infinite;
+  }
+  .blob2{
+    width: 40vw; height: 40vw;
+    background: var(--blob2);
+    top: 30%; right: -12%;
+    animation: float2 26s ease-in-out infinite;
+  }
+  .blob3{
+    width: 38vw; height: 38vw;
+    background: var(--blob3);
+    bottom: -14%; left: 15%;
+    animation: float3 30s ease-in-out infinite;
+  }
+  .blob4{
+    width: 30vw; height: 30vw;
+    background: var(--blob4);
+    bottom: 5%; right: 20%;
+    animation: float4 24s ease-in-out infinite;
+  }
+  @keyframes float1{
+    0%,100%{ transform: translate(0,0) scale(1); }
+    50%{ transform: translate(6vw, 8vh) scale(1.12); }
+  }
+  @keyframes float2{
+    0%,100%{ transform: translate(0,0) scale(1); }
+    50%{ transform: translate(-7vw, 6vh) scale(1.08); }
+  }
+  @keyframes float3{
+    0%,100%{ transform: translate(0,0) scale(1); }
+    50%{ transform: translate(5vw, -6vh) scale(1.1); }
+  }
+  @keyframes float4{
+    0%,100%{ transform: translate(0,0) scale(1); }
+    50%{ transform: translate(-4vw, -5vh) scale(1.15); }
+  }
+
+  .app{
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 32px 24px 60px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom: 30px;
+    animation: fadeSlideDown 0.7s ease both;
+  }
+  .topbar h1{
+    font-family: "Outfit", "Inter", sans-serif;
+    font-size: 1.85rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin:0;
+    background: linear-gradient(90deg, var(--accent), var(--blue), var(--amber), var(--accent));
+    background-size: 300% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradientShift 8s linear infinite, glowPulse 3.2s ease-in-out infinite;
+  }
+  @keyframes gradientShift{
+    to{ background-position: 300% center; }
+  }
+  @keyframes glowPulse{
+    0%,100%{ filter: drop-shadow(0 0 6px rgba(95,191,136,0.35)); }
+    50%{ filter: drop-shadow(0 0 16px rgba(107,147,214,0.45)); }
+  }
+
+  .switch-wrap{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .switch{
+    position:relative;
+    width:46px;
+    height:26px;
+  }
+  .switch input{
+    opacity:0;
+    width:0;
+    height:0;
+  }
+  .slider-toggle{
+    position:absolute;
+    cursor:pointer;
+    inset:0;
+    background: var(--ring-track);
+    border-radius: 999px;
+    transition: 0.3s;
+  }
+  .slider-toggle::before{
+    content:"";
+    position:absolute;
+    height:22px;
+    width:22px;
+    left:2px;
+    top:2px;
+    background:white;
+    border-radius:50%;
+    transition:0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .switch input:checked + .slider-toggle{
+    background: var(--accent);
+  }
+  .switch input:checked + .slider-toggle::before{
+    transform: translateX(20px);
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 860px){
+    .grid{grid-template-columns: 1fr;}
+  }
+
+  .panel{
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 22px;
+    padding: 24px;
+    box-shadow: var(--panel-shadow);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.3s ease, transform 0.3s ease;
+    animation: fadeSlideUp 0.7s ease both;
+  }
+  .panel:hover{
+    box-shadow: 0 10px 40px rgba(31,38,68,0.14), inset 0 1px 0 rgba(255,255,255,0.5);
+    transform: translateY(-2px);
+  }
+  body.dark .panel:hover{
+    box-shadow: 0 10px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .grid .panel:nth-child(2){ animation-delay: 0.1s; }
+  .chart-panel{ animation-delay: 0.15s; }
+
+  @keyframes fadeSlideUp{
+    from{ opacity:0; transform: translateY(14px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+  @keyframes fadeSlideDown{
+    from{ opacity:0; transform: translateY(-10px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+
+  .panel h2{
+    font-family: "Outfit", "Inter", sans-serif;
+    font-size: 1rem;
+    font-weight:600;
+    margin: 0 0 18px;
+    letter-spacing: -0.01em;
+  }
+  .panel h2.sub{
+    margin-top: 26px;
+    padding-top: 20px;
+    border-top: 1px solid var(--panel-border);
+  }
+
+  .field-row{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .field-row-3{
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .field{
+    margin-bottom: 14px;
+  }
+  label{
+    display:block;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .input-plain{
+    width:100%;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    color: var(--text);
+    padding: 9px 12px;
+    font-size: 0.92rem;
+    font-family: inherit;
+    outline:none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.3s;
+  }
+  .input-plain:focus{
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .slider-field{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+  }
+  .slider-field input[type="range"]{
+    flex:1;
+    -webkit-appearance:none;
+    appearance:none;
+    height:4px;
+    border-radius:999px;
+    background: var(--ring-track);
+    outline:none;
+  }
+  .slider-field input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    appearance:none;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background: var(--accent);
+    cursor:pointer;
+    border: 2px solid var(--bg-base);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    transition: transform 0.15s ease;
+  }
+  .slider-field input[type="range"]::-webkit-slider-thumb:hover{
+    transform: scale(1.15);
+  }
+  .slider-field input[type="range"]::-moz-range-thumb{
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background: var(--accent);
+    cursor:pointer;
+    border: 2px solid var(--bg-base);
+  }
+  .slider-field .input-plain{
+    width: 84px;
+    flex: none;
+    text-align:center;
+  }
+
+  .lumpsum-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-bottom: 14px;
+  }
+  .lumpsum-row{
+    display:grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 10px;
+    align-items:center;
+    animation: fadeSlideUp 0.35s ease both;
+  }
+  .btn{
+    border:none;
+    border-radius: 10px;
+    padding: 9px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor:pointer;
+    font-family: inherit;
+    transition: transform 0.15s ease, opacity 0.15s ease, background 0.2s ease, box-shadow 0.2s ease;
+  }
+  .btn:active{ transform: scale(0.96); }
+  .btn-primary{
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover{ background: var(--accent-dark); box-shadow: 0 4px 14px var(--accent-soft); }
+  .btn-ghost{
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--input-border);
+    padding: 9px 12px;
+  }
+  .btn-ghost:hover{ background: rgba(217,117,117,0.08); }
+  .btn-add{
+    background: var(--accent-soft);
+    color: var(--accent-dark);
+    width:100%;
+    padding: 10px;
+  }
+  .btn-add:hover{ background: var(--accent); color: white; }
+  body.dark .btn-add{ color: var(--accent); }
+  body.dark .btn-add:hover{ color: #0d1a12; }
+
+  .result-panel{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .ring-wrap{
+    position:relative;
+    width: 100%;
+    max-width: 240px;
+    margin: 4px auto 18px;
+    transition: transform 0.4s ease;
+  }
+  .ring-center{
+    position:absolute;
+    top:50%; left:50%;
+    transform: translate(-50%,-50%);
+    text-align:center;
+  }
+  .ring-center .amt{
+    font-family: "Outfit", "Inter", sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    transition: opacity 0.2s;
+  }
+  .ring-center .lbl{
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top:2px;
+  }
+
+  .legend-list{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-top: 6px;
+  }
+  .legend-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size: 0.85rem;
+    padding: 10px 14px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 12px;
+    transition: transform 0.2s ease, background 0.3s ease;
+  }
+  .legend-item:hover{ transform: translateX(2px); }
+  .legend-item .dot{
+    display:inline-block;
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    margin-right:8px;
+  }
+  .legend-item .val{
+    font-weight: 600;
+    transition: opacity 0.2s;
+  }
+
+  .chart-panel{
+    margin-top: 20px;
+  }
+  .chart-canvas-wrap{
+    position:relative;
+    height: 320px;
+  }
+  .range-controls{
+    display:flex;
+    align-items:center;
+    gap: 16px;
+    margin-top: 18px;
+  }
+  .range-controls label{
+    margin:0;
+    white-space:nowrap;
+  }
+  .range-controls .slider-field{
+    flex:1;
+  }
+
+  footer{
+    text-align:center;
+    color: var(--muted);
+    font-size: 0.75rem;
+    margin-top: 30px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="aurora">
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
+  <div class="blob blob4"></div>
+</div>
+
+<div class="app">
+  <div class="topbar">
+    <h1>Investment Calculator</h1>
+    <div class="switch-wrap">
+      <span id="modeLabel">Light</span>
+      <label class="switch">
+        <input type="checkbox" id="darkToggle">
+        <span class="slider-toggle"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- LEFT: Inputs -->
+    <div class="panel">
+      <h2>Monthly SIP</h2>
+      <div class="field">
+        <label for="sipAmount">Monthly Investment Amount (₹)</label>
+        <input type="number" class="input-plain" id="sipAmount" value="10000" min="0" step="500">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="sipStart">Start Year</label>
+          <input type="number" class="input-plain" id="sipStart" value="0" min="0" step="1">
+        </div>
+        <div class="field">
+          <label for="sipEnd">End Year</label>
+          <input type="number" class="input-plain" id="sipEnd" value="10" min="1" step="1">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="stepUpPct">Annual Step-up (%)</label>
+          <input type="number" class="input-plain" id="stepUpPct" value="0" min="0" step="0.5">
+        </div>
+        <div class="field">
+          <label for="stepUpStartYear">Step-up Starts In Year</label>
+          <input type="number" class="input-plain" id="stepUpStartYear" value="1" min="0" step="1">
+        </div>
+      </div>
+
+      <h2 class="sub">Lumpsum Investment</h2>
+      <div class="field-row">
+        <div class="field">
+          <label for="lumpAmount">Amount (₹)</label>
+          <input type="number" class="input-plain" id="lumpAmount" value="100000" min="0" step="1000">
+        </div>
+        <div class="field">
+          <label for="lumpYear">Investment Year</label>
+          <input type="number" class="input-plain" id="lumpYear" value="0" min="0" step="1">
+        </div>
+      </div>
+
+      <h2 class="sub">Additional Investments</h2>
+      <div class="lumpsum-list" id="extraList"></div>
+      <button class="btn btn-add" id="addExtra">+ Add investment at a specific year</button>
+
+      <h2 class="sub">Return &amp; Duration</h2>
+      <div class="field">
+        <label for="rateInput">Expected Annual Return (%)</label>
+        <div class="slider-field">
+          <input type="range" id="rateSlider" min="1" max="30" step="0.5" value="12">
+          <input type="number" class="input-plain" id="rateInput" value="12" min="0" max="50" step="0.1">
+        </div>
+      </div>
+      <div class="field">
+        <label for="durationInput">Total Duration (years)</label>
+        <div class="slider-field">
+          <input type="range" id="durationSlider" min="1" max="40" step="1" value="15">
+          <input type="number" class="input-plain" id="durationInput" value="15" min="1" max="60" step="1">
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Results ring -->
+    <div class="panel result-panel">
+      <h2 style="align-self:flex-start;">Portfolio Breakdown</h2>
+      <div class="ring-wrap">
+        <canvas id="ringChart"></canvas>
+        <div class="ring-center">
+          <div class="amt" id="ringTotal">₹0</div>
+          <div class="lbl">Future Value</div>
+        </div>
+      </div>
+      <div class="legend-list">
+        <div class="legend-item">
+          <span><span class="dot" style="background:var(--blue)"></span>Total Invested</span>
+          <span class="val" id="legendInvested">₹0</span>
+        </div>
+        <div class="legend-item">
+          <span><span class="dot" style="background:var(--accent)"></span>Estimated Returns</span>
+          <span class="val" id="legendReturns">₹0</span>
+        </div>
+        <div class="legend-item">
+          <span><span class="dot" style="background:var(--amber)"></span>Future Value</span>
+          <span class="val" id="legendTotal">₹0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM: Growth chart -->
+  <div class="panel chart-panel">
+    <h2>Growth Over Time</h2>
+    <div class="chart-canvas-wrap">
+      <canvas id="growthChart"></canvas>
+    </div>
+    <div class="range-controls">
+      <label>View:</label>
+      <div class="slider-field">
+        <input type="range" id="viewStart" min="0" max="15" step="1" value="0">
+        <input type="number" class="input-plain" id="viewStartInput" value="0" min="0">
+      </div>
+      <span style="color:var(--muted); font-size:0.8rem;">to</span>
+      <div class="slider-field">
+        <input type="range" id="viewEnd" min="0" max="15" step="1" value="15">
+        <input type="number" class="input-plain" id="viewEndInput" value="15" min="0">
+      </div>
+    </div>
+  </div>
+
+  <footer>Figures are estimates based on the inputs provided and are not guaranteed returns.</footer>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+
+  // ---------- Dark mode ----------
+  const darkToggle = $('darkToggle');
+  const modeLabel = $('modeLabel');
+  darkToggle.addEventListener('change', () => {
+    document.body.classList.toggle('dark', darkToggle.checked);
+    modeLabel.textContent = darkToggle.checked ? 'Dark' : 'Light';
+    updateChartColors();
+  });
+
+  // ---------- Extra lumpsum investments ----------
+  let extraId = 0;
+  const extraList = $('extraList');
+  const extras = []; // {id, amount, year}
+
+  function addExtraRow(amount, year){
+    if (amount === undefined) amount = 50000;
+    if (year === undefined) year = 5;
+    const id = extraId++;
+    extras.push({id, amount, year});
+    const row = document.createElement('div');
+    row.className = 'lumpsum-row';
+    row.dataset.id = id;
+    row.innerHTML =
+      '<input type="number" class="input-plain extra-amount" value="' + amount + '" min="0" step="1000" placeholder="Amount (₹)">' +
+      '<input type="number" class="input-plain extra-year" value="' + year + '" min="0" step="1" placeholder="Year">' +
+      '<button class="btn btn-ghost extra-remove">Remove</button>';
+    extraList.appendChild(row);
+
+    row.querySelector('.extra-amount').addEventListener('input', e => {
+      const item = extras.find(x => x.id === id);
+      item.amount = parseFloat(e.target.value) || 0;
+      calculate();
+    });
+    row.querySelector('.extra-year').addEventListener('input', e => {
+      const item = extras.find(x => x.id === id);
+      item.year = parseFloat(e.target.value) || 0;
+      calculate();
+    });
+    row.querySelector('.extra-remove').addEventListener('click', () => {
+      const idx = extras.findIndex(x => x.id === id);
+      if (idx > -1) extras.splice(idx, 1);
+      row.remove();
+      calculate();
+    });
+  }
+
+  $('addExtra').addEventListener('click', () => {
+    addExtraRow();
+    calculate();
+  });
+
+  // ---------- Sliders <-> number inputs sync ----------
+  function syncPair(sliderId, inputId, cb){
+    const slider = $(sliderId);
+    const input = $(inputId);
+    slider.addEventListener('input', () => { input.value = slider.value; cb(); });
+    input.addEventListener('input', () => {
+      let v = parseFloat(input.value);
+      if (isNaN(v)) return;
+      if (slider.min !== '' && v < parseFloat(slider.min)) v = parseFloat(slider.min);
+      if (slider.max !== '' && v > parseFloat(slider.max)) slider.value = slider.max;
+      else slider.value = v;
+      cb();
+    });
+  }
+
+  syncPair('rateSlider', 'rateInput', calculate);
+  syncPair('durationSlider', 'durationInput', () => { onDurationChange(); calculate(); });
+
+  function onDurationChange(){
+    const dur = parseFloat($('durationInput').value) || 1;
+    $('viewStart').max = dur;
+    $('viewEnd').max = dur;
+    $('viewStartInput').max = dur;
+    $('viewEndInput').max = dur;
+    if (parseFloat($('viewEnd').value) > dur){
+      $('viewEnd').value = dur;
+      $('viewEndInput').value = dur;
+    }
+  }
+
+  syncPair('viewStart', 'viewStartInput', renderGrowthChart);
+  syncPair('viewEnd', 'viewEndInput', renderGrowthChart);
+
+  ['sipAmount','sipStart','sipEnd','stepUpPct','stepUpStartYear','lumpAmount','lumpYear'].forEach(id => {
+    $(id).addEventListener('input', calculate);
+  });
+
+  // ---------- Formatting ----------
+  function fmt(num){
+    if (num === null || num === undefined || isNaN(num)) num = 0;
+    return '₹' + Math.round(num).toLocaleString('en-IN');
+  }
+
+  // ---------- Core simulation ----------
+  let monthlySeries = []; // {month, value, invested}
+
+  function simulate(){
+    const sipAmountBase = parseFloat($('sipAmount').value) || 0;
+    const sipStart = parseFloat($('sipStart').value) || 0;
+    const sipEnd = parseFloat($('sipEnd').value) || 0;
+    const stepUpPct = parseFloat($('stepUpPct').value) || 0;
+    const stepUpStartYear = parseFloat($('stepUpStartYear').value) || 0;
+    const lumpAmount = parseFloat($('lumpAmount').value) || 0;
+    const lumpYear = parseFloat($('lumpYear').value) || 0;
+    const annualRate = parseFloat($('rateInput').value) || 0;
+    const duration = parseFloat($('durationInput').value) || 1;
+
+    const totalMonths = Math.round(duration * 12);
+    const monthlyRate = annualRate / 100 / 12;
+
+    const sipStartMonth = Math.round(sipStart * 12);
+    const sipEndMonth = Math.round(sipEnd * 12);
+    const lumpMonth = Math.round(lumpYear * 12);
+
+    const extraMonths = extras.map(e => ({ amount: e.amount, month: Math.round(e.year * 12) }));
+
+    let value = 0;
+    let invested = 0;
+    const series = [];
+
+    for (let m = 0; m <= totalMonths; m++){
+      if (m === lumpMonth){
+        value += lumpAmount;
+        invested += lumpAmount;
+      }
+      if (m >= sipStartMonth && m < sipEndMonth){
+        const currentYear = Math.floor(m / 12);
+        let sipAmount = sipAmountBase;
+        if (stepUpPct > 0 && currentYear >= stepUpStartYear){
+          const stepsApplied = Math.floor(currentYear - stepUpStartYear) + 1;
+          sipAmount = sipAmountBase * Math.pow(1 + stepUpPct / 100, stepsApplied);
+        }
+        value += sipAmount;
+        invested += sipAmount;
+      }
+      extraMonths.forEach(e => {
+        if (e.month === m){
+          value += e.amount;
+          invested += e.amount;
+        }
+      });
+
+      series.push({ month: m, value: value, invested: invested });
+
+      if (m < totalMonths){
+        value = value * (1 + monthlyRate);
+      }
+    }
+
+    monthlySeries = series;
+    return series;
+  }
+
+  // ---------- Ring chart ----------
+  let ringChartInstance = null;
+  function renderRingChart(finalInvested, finalReturns){
+    const ctx = $('ringChart').getContext('2d');
+    const dataVals = [finalInvested, finalReturns > 0 ? finalReturns : 0];
+    const colors = [
+      getCssVar('--blue') || '#6b93d6',
+      getCssVar('--accent') || '#5fbf88'
+    ];
+    if (ringChartInstance){
+      ringChartInstance.data.datasets[0].data = dataVals;
+      ringChartInstance.data.datasets[0].backgroundColor = colors;
+      ringChartInstance.update();
+      return;
+    }
+    ringChartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Total Invested', 'Estimated Returns'],
+        datasets: [{
+          data: dataVals,
+          backgroundColor: colors,
+          borderWidth: 0,
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        cutout: '72%',
+        animation: { animateRotate: true, duration: 700, easing: 'easeOutQuart' },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => ctx.label + ': ' + fmt(ctx.raw)
+            }
+          }
+        },
+        responsive: true,
+        maintainAspectRatio: true
+      }
+    });
+  }
+
+  // ---------- Growth chart ----------
+  let growthChartInstance = null;
+  function getCssVar(name){
+    return getComputedStyle(document.body).getPropertyValue(name).trim();
+  }
+
+  function renderGrowthChart(){
+    if (!monthlySeries.length) return;
+    const viewStart = parseFloat($('viewStartInput').value) || 0;
+    const viewEnd = parseFloat($('viewEndInput').value) || parseFloat($('durationInput').value);
+
+    const startMonth = Math.round(viewStart * 12);
+    const endMonth = Math.round(viewEnd * 12);
+
+    const filtered = monthlySeries.filter(p => p.month >= startMonth && p.month <= endMonth);
+    const step = Math.max(1, Math.ceil(filtered.length / 60));
+    const sampled = filtered.filter((_, i) => i % step === 0 || i === filtered.length - 1);
+
+    const labels = sampled.map(p => Math.round((p.month / 12) * 10) / 10);
+    const values = sampled.map(p => Math.round(p.value));
+    const invested = sampled.map(p => Math.round(p.invested));
+
+    const accent = getCssVar('--accent') || '#5fbf88';
+    const blue = getCssVar('--blue') || '#6b93d6';
+    const text = getCssVar('--text') || '#33333c';
+    const muted = getCssVar('--muted') || '#7a7a85';
+    const gridColor = getCssVar('--panel-border') || 'rgba(120,120,140,0.15)';
+
+    const ctx = $('growthChart').getContext('2d');
+
+    if (growthChartInstance){
+      growthChartInstance.data.labels = labels;
+      growthChartInstance.data.datasets[0].data = values;
+      growthChartInstance.data.datasets[1].data = invested;
+      growthChartInstance.options.scales.x.ticks.color = muted;
+      growthChartInstance.options.scales.y.ticks.color = muted;
+      growthChartInstance.options.scales.x.grid.color = gridColor;
+      growthChartInstance.options.scales.y.grid.color = gridColor;
+      growthChartInstance.options.scales.x.title.color = muted;
+      growthChartInstance.data.datasets[0].borderColor = accent;
+      growthChartInstance.data.datasets[0].backgroundColor = accent + '22';
+      growthChartInstance.data.datasets[1].borderColor = blue;
+      growthChartInstance.update();
+      return;
+    }
+
+    growthChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Portfolio Value',
+            data: values,
+            borderColor: accent,
+            backgroundColor: accent + '22',
+            fill: true,
+            tension: 0.35,
+            pointRadius: 0,
+            borderWidth: 2.5
+          },
+          {
+            label: 'Total Invested',
+            data: invested,
+            borderColor: blue,
+            backgroundColor: 'transparent',
+            borderDash: [5,4],
+            fill: false,
+            tension: 0.35,
+            pointRadius: 0,
+            borderWidth: 2
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        animation: { duration: 500, easing: 'easeOutQuart' },
+        plugins: {
+          legend: {
+            display: true,
+            labels: { color: text, font: { family: 'Inter' }, usePointStyle: true }
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => ctx.dataset.label + ': ' + fmt(ctx.raw)
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: muted },
+            grid: { color: gridColor },
+            title: { display: true, text: 'Years', color: muted, font: { family: 'Inter', size: 12 } }
+          },
+          y: {
+            ticks: { color: muted, callback: v => '₹' + (v/100000).toFixed(1) + 'L' },
+            grid: { color: gridColor }
+          }
+        }
+      }
+    });
+  }
+
+  function updateChartColors(){
+    if (growthChartInstance){
+      growthChartInstance.destroy();
+      growthChartInstance = null;
+    }
+    if (ringChartInstance){
+      ringChartInstance.destroy();
+      ringChartInstance = null;
+    }
+    calculate();
+  }
+
+  // ---------- Main calculate ----------
+  function calculate(){
+    const series = simulate();
+    const last = series[series.length - 1];
+    const finalValue = last.value;
+    const finalInvested = last.invested;
+    const finalReturns = finalValue - finalInvested;
+
+    $('ringTotal').textContent = fmt(finalValue);
+    $('legendInvested').textContent = fmt(finalInvested);
+    $('legendReturns').textContent = fmt(finalReturns);
+    $('legendTotal').textContent = fmt(finalValue);
+
+    renderRingChart(finalInvested, finalReturns);
+    renderGrowthChart();
+  }
+
+  // ---------- Init ----------
+  addExtraRow(50000, 5);
+  onDurationChange();
+  calculate();
+})();
+</script>
+
+</body>
+</html>
