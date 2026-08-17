@@ -10,10 +10,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   :root{
-    --bg-base: #f3f4f8;
-    --panel: rgba(255,255,255,0.45);
-    --panel-border: rgba(255,255,255,0.6);
-    --panel-shadow: 0 8px 32px rgba(31,38,68,0.10), inset 0 1px 0 rgba(255,255,255,0.5);
+    --bg-base: #faf6ec;
+    --panel: rgba(255,255,255,0.62);
+    --panel-border: rgba(255,255,255,0.7);
+    --panel-shadow: 0 6px 24px rgba(31,38,68,0.08), inset 0 1px 0 rgba(255,255,255,0.5);
     --text: #33333c;
     --muted: #7a7a85;
     --accent: #5fbf88;
@@ -21,20 +21,17 @@
     --accent-soft: rgba(95,191,136,0.14);
     --blue: #6b93d6;
     --amber: #e0a75e;
-    --input-bg: rgba(255,255,255,0.55);
+    --input-bg: rgba(255,255,255,0.65);
     --input-border: rgba(120,120,140,0.22);
     --ring-track: rgba(120,120,140,0.15);
     --danger: #d97575;
-    --blob1: #cfe8d8;
-    --blob2: #cdd9f2;
-    --blob3: #f2ddc9;
-    --blob4: #e6d2ee;
+    --spotlight: rgba(255,255,255,0.55);
   }
   body.dark{
-    --bg-base: #101116;
-    --panel: rgba(35,36,46,0.5);
+    --bg-base: #1b1a17;
+    --panel: rgba(35,36,46,0.55);
     --panel-border: rgba(255,255,255,0.08);
-    --panel-shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
+    --panel-shadow: 0 6px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
     --text: #eceef3;
     --muted: #9a9aa6;
     --accent: #59d18f;
@@ -46,10 +43,7 @@
     --input-border: rgba(255,255,255,0.12);
     --ring-track: rgba(255,255,255,0.1);
     --danger: #e08888;
-    --blob1: #1b3a2c;
-    --blob2: #1c2440;
-    --blob3: #3a2c1c;
-    --blob4: #2e1f3a;
+    --spotlight: rgba(255,255,255,0.14);
   }
   *{box-sizing:border-box;}
   html,body{ height:100%; }
@@ -64,59 +58,25 @@
     overflow-x: hidden;
   }
 
-  /* ---------- Animated aurora background ---------- */
-  .aurora{
+  /* ---------- Plain background: ivory in light mode, rough dark in dark mode ---------- */
+  .waves{
     position: fixed;
     inset: 0;
     z-index: -1;
-    overflow: hidden;
-    filter: blur(70px) saturate(140%);
+    background: var(--bg-base);
+    transition: background 0.6s ease;
   }
-  .blob{
+  .waves::after{
+    content: "";
     position: absolute;
-    border-radius: 50%;
-    opacity: 0.75;
-    will-change: transform;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    mix-blend-mode: overlay;
   }
-  .blob1{
-    width: 46vw; height: 46vw;
-    background: var(--blob1);
-    top: -10%; left: -8%;
-    animation: float1 22s ease-in-out infinite;
-  }
-  .blob2{
-    width: 40vw; height: 40vw;
-    background: var(--blob2);
-    top: 30%; right: -12%;
-    animation: float2 26s ease-in-out infinite;
-  }
-  .blob3{
-    width: 38vw; height: 38vw;
-    background: var(--blob3);
-    bottom: -14%; left: 15%;
-    animation: float3 30s ease-in-out infinite;
-  }
-  .blob4{
-    width: 30vw; height: 30vw;
-    background: var(--blob4);
-    bottom: 5%; right: 20%;
-    animation: float4 24s ease-in-out infinite;
-  }
-  @keyframes float1{
-    0%,100%{ transform: translate(0,0) scale(1); }
-    50%{ transform: translate(6vw, 8vh) scale(1.12); }
-  }
-  @keyframes float2{
-    0%,100%{ transform: translate(0,0) scale(1); }
-    50%{ transform: translate(-7vw, 6vh) scale(1.08); }
-  }
-  @keyframes float3{
-    0%,100%{ transform: translate(0,0) scale(1); }
-    50%{ transform: translate(5vw, -6vh) scale(1.1); }
-  }
-  @keyframes float4{
-    0%,100%{ transform: translate(0,0) scale(1); }
-    50%{ transform: translate(-4vw, -5vh) scale(1.15); }
+  body.dark .waves::after{
+    opacity: 0.18;
   }
 
   .app{
@@ -140,19 +100,20 @@
     font-weight: 700;
     letter-spacing: -0.02em;
     margin:0;
-    background: linear-gradient(90deg, var(--accent), var(--blue), var(--amber), var(--accent));
-    background-size: 300% auto;
+    background: linear-gradient(90deg, #4f8fe0, #52b869, #e0c23e, #e0574a, #4f8fe0);
+    background-size: 400% auto;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    animation: gradientShift 8s linear infinite, glowPulse 3.2s ease-in-out infinite;
+    animation: gradientShift 10s linear infinite, glowPulse 4s ease-in-out infinite;
   }
   @keyframes gradientShift{
-    to{ background-position: 300% center; }
+    to{ background-position: 400% center; }
   }
   @keyframes glowPulse{
-    0%,100%{ filter: drop-shadow(0 0 6px rgba(95,191,136,0.35)); }
-    50%{ filter: drop-shadow(0 0 16px rgba(107,147,214,0.45)); }
+    0%,100%{ filter: drop-shadow(0 0 5px rgba(79,143,224,0.3)); }
+    33%{ filter: drop-shadow(0 0 5px rgba(82,184,105,0.3)); }
+    66%{ filter: drop-shadow(0 0 5px rgba(224,194,62,0.3)); }
   }
 
   .switch-wrap{
@@ -208,23 +169,38 @@
     .grid{grid-template-columns: 1fr;}
   }
 
+  /* ---------- Glass panel + mouse-reactive glow ---------- */
   .panel{
+    position: relative;
     background: var(--panel);
     border: 1px solid var(--panel-border);
     border-radius: 22px;
     padding: 24px;
     box-shadow: var(--panel-shadow);
-    backdrop-filter: blur(24px) saturate(160%);
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
-    transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.3s ease, transform 0.3s ease;
+    backdrop-filter: blur(10px) saturate(115%);
+    -webkit-backdrop-filter: blur(10px) saturate(115%);
+    transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.25s ease;
     animation: fadeSlideUp 0.7s ease both;
+    overflow: hidden;
+  }
+  .panel::after{
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle 70px at var(--mx, 50%) var(--my, 50%), var(--spotlight), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+  .panel:hover::after{
+    opacity: 1;
   }
   .panel:hover{
-    box-shadow: 0 10px 40px rgba(31,38,68,0.14), inset 0 1px 0 rgba(255,255,255,0.5);
-    transform: translateY(-2px);
+    box-shadow: 0 12px 34px rgba(31,38,68,0.14), inset 0 1px 0 rgba(255,255,255,0.5);
   }
   body.dark .panel:hover{
-    box-shadow: 0 10px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05);
+    box-shadow: 0 12px 34px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
   }
   .grid .panel:nth-child(2){ animation-delay: 0.1s; }
   .chart-panel{ animation-delay: 0.15s; }
@@ -257,12 +233,6 @@
     gap: 12px;
     margin-bottom: 14px;
   }
-  .field-row-3{
-    display:grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 14px;
-  }
   .field{
     margin-bottom: 14px;
   }
@@ -287,6 +257,9 @@
   }
   .input-plain:focus{
     border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .input-plain:hover{
     box-shadow: 0 0 0 3px var(--accent-soft);
   }
 
@@ -314,10 +287,11 @@
     cursor:pointer;
     border: 2px solid var(--bg-base);
     box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-    transition: transform 0.15s ease;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
   }
   .slider-field input[type="range"]::-webkit-slider-thumb:hover{
-    transform: scale(1.15);
+    transform: scale(1.2);
+    box-shadow: 0 0 0 6px var(--accent-soft);
   }
   .slider-field input[type="range"]::-moz-range-thumb{
     width:18px;
@@ -333,11 +307,18 @@
     text-align:center;
   }
 
-  .lumpsum-list{
+  .sip-list, .lumpsum-list{
     display:flex;
     flex-direction:column;
     gap:10px;
     margin-bottom: 14px;
+  }
+  .sip-row{
+    display:grid;
+    grid-template-columns: 1fr 0.8fr 0.8fr auto;
+    gap: 8px;
+    align-items:center;
+    animation: fadeSlideUp 0.35s ease both;
   }
   .lumpsum-row{
     display:grid;
@@ -366,7 +347,8 @@
     background: transparent;
     color: var(--danger);
     border: 1px solid var(--input-border);
-    padding: 9px 12px;
+    padding: 9px 10px;
+    font-size: 0.78rem;
   }
   .btn-ghost:hover{ background: rgba(217,117,117,0.08); }
   .btn-add{
@@ -375,7 +357,7 @@
     width:100%;
     padding: 10px;
   }
-  .btn-add:hover{ background: var(--accent); color: white; }
+  .btn-add:hover{ background: var(--accent); color: white; box-shadow: 0 4px 16px var(--accent-soft); }
   body.dark .btn-add{ color: var(--accent); }
   body.dark .btn-add:hover{ color: #0d1a12; }
 
@@ -389,7 +371,6 @@
     width: 100%;
     max-width: 240px;
     margin: 4px auto 18px;
-    transition: transform 0.4s ease;
   }
   .ring-center{
     position:absolute;
@@ -426,9 +407,12 @@
     background: var(--input-bg);
     border: 1px solid var(--input-border);
     border-radius: 12px;
-    transition: transform 0.2s ease, background 0.3s ease;
+    transition: transform 0.2s ease, background 0.3s ease, box-shadow 0.2s ease;
   }
-  .legend-item:hover{ transform: translateX(2px); }
+  .legend-item:hover{
+    transform: translateX(3px);
+    box-shadow: 0 4px 14px rgba(31,38,68,0.08);
+  }
   .legend-item .dot{
     display:inline-block;
     width:9px;
@@ -476,12 +460,7 @@
 </head>
 <body>
 
-<div class="aurora">
-  <div class="blob blob1"></div>
-  <div class="blob blob2"></div>
-  <div class="blob blob3"></div>
-  <div class="blob blob4"></div>
-</div>
+<div class="waves"></div>
 
 <div class="app">
   <div class="topbar">
@@ -498,31 +477,9 @@
   <div class="grid">
     <!-- LEFT: Inputs -->
     <div class="panel">
-      <h2>Monthly SIP</h2>
-      <div class="field">
-        <label for="sipAmount">Monthly Investment Amount (₹)</label>
-        <input type="number" class="input-plain" id="sipAmount" value="10000" min="0" step="500">
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label for="sipStart">Start Year</label>
-          <input type="number" class="input-plain" id="sipStart" value="0" min="0" step="1">
-        </div>
-        <div class="field">
-          <label for="sipEnd">End Year</label>
-          <input type="number" class="input-plain" id="sipEnd" value="10" min="1" step="1">
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label for="stepUpPct">Annual Step-up (%)</label>
-          <input type="number" class="input-plain" id="stepUpPct" value="0" min="0" step="0.5">
-        </div>
-        <div class="field">
-          <label for="stepUpStartYear">Step-up Starts In Year</label>
-          <input type="number" class="input-plain" id="stepUpStartYear" value="1" min="0" step="1">
-        </div>
-      </div>
+      <h2>Monthly SIP Periods</h2>
+      <div class="sip-list" id="sipList"></div>
+      <button class="btn btn-add" id="addSip">+ Add SIP period</button>
 
       <h2 class="sub">Lumpsum Investment</h2>
       <div class="field-row">
@@ -617,7 +574,67 @@
   darkToggle.addEventListener('change', () => {
     document.body.classList.toggle('dark', darkToggle.checked);
     modeLabel.textContent = darkToggle.checked ? 'Dark' : 'Light';
-    updateChartColors();
+    updateChartColorsInPlace();
+  });
+
+  // ---------- Mouse-reactive glass panels ----------
+  document.querySelectorAll('.panel').forEach(panel => {
+    panel.addEventListener('mousemove', (e) => {
+      const rect = panel.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      panel.style.setProperty('--mx', mx + 'px');
+      panel.style.setProperty('--my', my + 'px');
+    });
+  });
+
+  // ---------- SIP periods ----------
+  let sipId = 0;
+  const sipList = $('sipList');
+  const sipPeriods = []; // {id, amount, start, end}
+
+  function addSipRow(amount, start, end){
+    if (amount === undefined) amount = 10000;
+    if (start === undefined) start = 0;
+    if (end === undefined) end = 10;
+    const id = sipId++;
+    sipPeriods.push({id, amount, start, end});
+    const row = document.createElement('div');
+    row.className = 'sip-row';
+    row.dataset.id = id;
+    row.innerHTML =
+      '<input type="number" class="input-plain sip-amount" value="' + amount + '" min="0" step="500" placeholder="₹ / month">' +
+      '<input type="number" class="input-plain sip-start" value="' + start + '" min="0" step="1" placeholder="From yr">' +
+      '<input type="number" class="input-plain sip-end" value="' + end + '" min="0" step="1" placeholder="To yr">' +
+      '<button class="btn btn-ghost sip-remove">✕</button>';
+    sipList.appendChild(row);
+
+    row.querySelector('.sip-amount').addEventListener('input', e => {
+      const item = sipPeriods.find(x => x.id === id);
+      item.amount = parseFloat(e.target.value) || 0;
+      calculate();
+    });
+    row.querySelector('.sip-start').addEventListener('input', e => {
+      const item = sipPeriods.find(x => x.id === id);
+      item.start = parseFloat(e.target.value) || 0;
+      calculate();
+    });
+    row.querySelector('.sip-end').addEventListener('input', e => {
+      const item = sipPeriods.find(x => x.id === id);
+      item.end = parseFloat(e.target.value) || 0;
+      calculate();
+    });
+    row.querySelector('.sip-remove').addEventListener('click', () => {
+      const idx = sipPeriods.findIndex(x => x.id === id);
+      if (idx > -1) sipPeriods.splice(idx, 1);
+      row.remove();
+      calculate();
+    });
+  }
+
+  $('addSip').addEventListener('click', () => {
+    addSipRow();
+    calculate();
   });
 
   // ---------- Extra lumpsum investments ----------
@@ -695,7 +712,7 @@
   syncPair('viewStart', 'viewStartInput', renderGrowthChart);
   syncPair('viewEnd', 'viewEndInput', renderGrowthChart);
 
-  ['sipAmount','sipStart','sipEnd','stepUpPct','stepUpStartYear','lumpAmount','lumpYear'].forEach(id => {
+  ['lumpAmount','lumpYear'].forEach(id => {
     $(id).addEventListener('input', calculate);
   });
 
@@ -709,11 +726,6 @@
   let monthlySeries = []; // {month, value, invested}
 
   function simulate(){
-    const sipAmountBase = parseFloat($('sipAmount').value) || 0;
-    const sipStart = parseFloat($('sipStart').value) || 0;
-    const sipEnd = parseFloat($('sipEnd').value) || 0;
-    const stepUpPct = parseFloat($('stepUpPct').value) || 0;
-    const stepUpStartYear = parseFloat($('stepUpStartYear').value) || 0;
     const lumpAmount = parseFloat($('lumpAmount').value) || 0;
     const lumpYear = parseFloat($('lumpYear').value) || 0;
     const annualRate = parseFloat($('rateInput').value) || 0;
@@ -721,10 +733,13 @@
 
     const totalMonths = Math.round(duration * 12);
     const monthlyRate = annualRate / 100 / 12;
-
-    const sipStartMonth = Math.round(sipStart * 12);
-    const sipEndMonth = Math.round(sipEnd * 12);
     const lumpMonth = Math.round(lumpYear * 12);
+
+    const sipRanges = sipPeriods.map(s => ({
+      amount: s.amount,
+      startMonth: Math.round(s.start * 12),
+      endMonth: Math.round(s.end * 12)
+    }));
 
     const extraMonths = extras.map(e => ({ amount: e.amount, month: Math.round(e.year * 12) }));
 
@@ -737,16 +752,12 @@
         value += lumpAmount;
         invested += lumpAmount;
       }
-      if (m >= sipStartMonth && m < sipEndMonth){
-        const currentYear = Math.floor(m / 12);
-        let sipAmount = sipAmountBase;
-        if (stepUpPct > 0 && currentYear >= stepUpStartYear){
-          const stepsApplied = Math.floor(currentYear - stepUpStartYear) + 1;
-          sipAmount = sipAmountBase * Math.pow(1 + stepUpPct / 100, stepsApplied);
+      sipRanges.forEach(r => {
+        if (m >= r.startMonth && m < r.endMonth){
+          value += r.amount;
+          invested += r.amount;
         }
-        value += sipAmount;
-        invested += sipAmount;
-      }
+      });
       extraMonths.forEach(e => {
         if (e.month === m){
           value += e.amount;
@@ -913,16 +924,29 @@
     });
   }
 
-  function updateChartColors(){
-    if (growthChartInstance){
-      growthChartInstance.destroy();
-      growthChartInstance = null;
-    }
+  function updateChartColorsInPlace(){
+    const accent = getCssVar('--accent') || '#5fbf88';
+    const blue = getCssVar('--blue') || '#6b93d6';
+    const text = getCssVar('--text') || '#33333c';
+    const muted = getCssVar('--muted') || '#7a7a85';
+    const gridColor = getCssVar('--panel-border') || 'rgba(120,120,140,0.15)';
+
     if (ringChartInstance){
-      ringChartInstance.destroy();
-      ringChartInstance = null;
+      ringChartInstance.data.datasets[0].backgroundColor = [blue, accent];
+      ringChartInstance.update('none');
     }
-    calculate();
+    if (growthChartInstance){
+      growthChartInstance.data.datasets[0].borderColor = accent;
+      growthChartInstance.data.datasets[0].backgroundColor = accent + '22';
+      growthChartInstance.data.datasets[1].borderColor = blue;
+      growthChartInstance.options.scales.x.ticks.color = muted;
+      growthChartInstance.options.scales.y.ticks.color = muted;
+      growthChartInstance.options.scales.x.grid.color = gridColor;
+      growthChartInstance.options.scales.y.grid.color = gridColor;
+      growthChartInstance.options.scales.x.title.color = muted;
+      growthChartInstance.options.plugins.legend.labels.color = text;
+      growthChartInstance.update('none');
+    }
   }
 
   // ---------- Main calculate ----------
@@ -943,6 +967,8 @@
   }
 
   // ---------- Init ----------
+  addSipRow(10000, 0, 2);
+  addSipRow(15000, 2, 8);
   addExtraRow(50000, 5);
   onDurationChange();
   calculate();
